@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>業務スケジュール</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f6b4f">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --bg:#f4f6f4; --fg:#1c2420; --muted:#5f6b64; --accent:#2f6b4f; --surface:#fff; --line:#dfe5e0; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1512; --fg:#e8eee9; --muted:#98a59d; --accent:#6fc39a; --surface:#18211c; --line:#2a362f; } }
+  html,body { background:var(--bg); color:var(--fg); margin:0; }
+  body { font-family:'Hiragino Sans','Noto Sans JP',system-ui,sans-serif; padding:32px 16px; line-height:1.6; }
+  .wrap { max-width:420px; margin:0 auto; text-align:center; }
+  img { width:96px; height:96px; border-radius:22px; }
+  h1 { font-size:22px; margin:12px 0 4px; }
+  p { color:var(--muted); font-size:14px; margin:6px 0; }
+  .btn { display:block; width:100%; box-sizing:border-box; margin-top:16px; padding:14px; border-radius:12px; font-size:16px; font-weight:700; border:1px solid var(--accent); text-decoration:none; }
+  .primary { background:var(--accent); color:var(--bg); }
+  .sub { background:var(--surface); color:var(--accent); }
+  .help { text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-top:20px; font-size:14px; }
+  .help ol { padding-left:20px; margin:6px 0; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img src="icon-192.png" alt="">
+  <h1>業務スケジュール</h1>
+  <p id="msg">ホーム画面に追加すると、アイコンからすぐ開けます。</p>
+  <button class="btn primary" id="install" hidden>ホーム画面にインストール</button>
+  <a class="btn sub" id="open" href="#">今すぐ開く</a>
+  <div class="help" id="help">
+    <b>インストールのボタンが出ないとき</b>
+    <ol>
+      <li>このページをChromeで開いていることを確認</li>
+      <li>右上の「︙」から「アプリをインストール」または「ホーム画面に追加」を選ぶ</li>
+    </ol>
+  </div>
+</div>
+<script>
+  var TARGET = 'https://claude.ai/artifact/T92H67p3zpvHWTf744phFJ';
+  document.getElementById('open').href = TARGET;
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  // Launched from the home screen icon: go straight to the app.
+  if (standalone || /[?&]launch=1/.test(location.search)) {
+    document.getElementById('msg').textContent = '開いています…';
+    location.replace(TARGET);
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  var deferred;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); deferred = e;
+    document.getElementById('install').hidden = false;
+  });
+  document.getElementById('install').addEventListener('click', async function () {
+    if (!deferred) return;
+    deferred.prompt();
+    var r = await deferred.userChoice; deferred = null;
+    this.hidden = true;
+    if (r.outcome === 'accepted') document.getElementById('msg').textContent = 'インストールしました。ホーム画面のアイコンから開けます。';
+  });
+  window.addEventListener('appinstalled', function () { document.getElementById('help').hidden = true; });
+</script>
+</body>
+</html>
